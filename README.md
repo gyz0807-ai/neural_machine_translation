@@ -1,2 +1,5 @@
 # neural_machine_translation
-Tensorflow neural machine translation
+Source of dataset: http://www.statmt.org/wmt17/translation-task.html
+
+## Download dataset
+`sh download_data.sh`
