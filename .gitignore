@@ -1,2 +1,5 @@
 dataset
 .vscode
+.ipynb_checkpoints
+__pycache__
+vocab
