@@ -1,9 +1,26 @@
 import re
 import os
+import bs4
 import string
 import pickle
 import numpy as np
 from lib.utils import create_path
+
+def read_tmx(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        txt = f.readlines()
+
+    txt_str = ''
+    for row in txt:
+        txt_str += row
+
+    txt_xml_soup = bs4.BeautifulSoup(txt_str, 'xml')
+    en_txt = txt_xml_soup.findAll('tuv', {'xml:lang':"en"})
+    en_txt = [element.text for element in en_txt]
+    ch_txt = txt_xml_soup.findAll('tuv', {'xml:lang':"zh"})
+    ch_txt = [element.text for element in ch_txt]
+    
+    return en_txt, ch_txt
 
 def label_start_end(sentence):
     return '<START> ' + sentence + ' <END>'
@@ -30,6 +47,12 @@ def is_english(word, eng_char_percent=0.5):
                 True if len(re.findall('[a-zA-Z]', word)) / len(word) >
                 eng_char_percent else False)
 
+def not_english_sentence(sentence, end_char_percent=0.5):
+    num_eng_char = len(re.findall('[A-Za-z]', sentence))
+    if num_eng_char / len(sentence) < end_char_percent:
+        return True
+    return False
+
 def is_chinese(word):
     if word in ['<START>', '<END>']:
         return True
@@ -41,6 +64,30 @@ def is_chinese(word):
         else:
             return True
 
+def en_txt_preproc(txt):
+    s_full_processed = []
+    for s in txt:
+        s = re.sub('\n|\xad', '', s) # remove \n
+        s = re.sub('“', '"', s)
+        s = re.sub('‘', '\'', s)
+        s = re.sub('\xa0|\t', ' ', s)
+        s = add_space_before_punct(s) # add space before puncts
+        s = s.lower() # turn into lower cases
+        s = label_start_end(s) # tag start and end
+        s = two_spaces_to_one(s) # if two spaces, delete one
+        s_full_processed.append(s)
+    return s_full_processed
+
+def ch_txt_preproc(txt):
+    s_full_processed = []
+    for s in txt:
+        s = re.sub('\n|\xad', '', s)
+        s = re.sub('([^0-9])', r' \1 ', s)
+        s = label_start_end(s)
+        s = two_spaces_to_one(s)
+        s = s_full_processed.append(s)
+    return s_full_processed
+
 class VocabEN(object):
     """
     Preprocess english text
@@ -49,22 +96,8 @@ class VocabEN(object):
         self.txt = txt
         self.word_dict = None
 
-    def txt_preproc(self):
-        s_full_processed = []
-        for s in self.txt:
-            s = re.sub('\n|\xad', '', s) # remove \n
-            s = re.sub('“', '"', s)
-            s = re.sub('‘', '\'', s)
-            s = re.sub('\xa0|\t', ' ', s)
-            s = add_space_before_punct(s) # add space before puncts
-            s = s.lower() # turn into lower cases
-            s = label_start_end(s) # tag start and end
-            s = two_spaces_to_one(s) # if two spaces, delete one
-            s_full_processed.append(s)
-        return s_full_processed
-
     def create_vocab_dict(self, freq_cutoff=3, eng_char_percent=0.5):
-        preprocessed_txt = self.txt_preproc()
+        preprocessed_txt = en_txt_preproc(self.txt)
         ls_words = []
         for s in preprocessed_txt:
             s = s.split(' ')
@@ -81,8 +114,8 @@ class VocabEN(object):
         for w in unique_words_sub_sorted:
             if is_english(w, eng_char_percent):
                 final_word_ls.append(w)
-        self.word_dict = dict(zip(range(1, len(final_word_ls)+1), final_word_ls))
-        self.word_dict[0] = '<UNK>'
+        self.word_dict = dict(zip(range(2, len(final_word_ls)+2), final_word_ls))
+        self.word_dict[1] = '<UNK>'
         self.rev_word_dict = {val:key for key, val in self.word_dict.items()}
 
     def word_to_idx(self, word):
@@ -101,18 +134,8 @@ class VocabCH(object):
     def __init__(self, txt):
         self.txt = txt
 
-    def txt_preproc(self):
-        s_full_processed = []
-        for s in self.txt:
-            s = re.sub('\n|\xad', '', s)
-            s = re.sub('([^0-9])', r' \1 ', s)
-            s = label_start_end(s)
-            s = two_spaces_to_one(s)
-            s = s_full_processed.append(s)
-        return s_full_processed
-
     def create_vocab_dict(self, freq_cutoff=2):
-        preprocessed_txt = self.txt_preproc()
+        preprocessed_txt = ch_txt_preproc(self.txt)
         ls_words = []
         for s in preprocessed_txt:
             s = s.split(' ')
@@ -128,8 +151,8 @@ class VocabCH(object):
         for w in unique_words_sub_sorted:
             if is_chinese(w):
                 final_word_ls.append(w)
-        self.word_dict = dict(zip(range(1, len(final_word_ls)+1), final_word_ls))
-        self.word_dict[0] = '<UNK>'
+        self.word_dict = dict(zip(range(2, len(final_word_ls)+2), final_word_ls))
+        self.word_dict[1] = '<UNK>'
         self.rev_word_dict = {val:key for key, val in self.word_dict.items()}
 
     def word_to_idx(self, word):
