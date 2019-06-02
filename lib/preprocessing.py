@@ -47,9 +47,9 @@ def is_english(word, eng_char_percent=0.5):
                 True if len(re.findall('[a-zA-Z]', word)) / len(word) >
                 eng_char_percent else False)
 
-def not_english_sentence(sentence, end_char_percent=0.5):
+def is_english_sentence(sentence, en_char_percent=0.7):
     num_eng_char = len(re.findall('[A-Za-z]', sentence))
-    if num_eng_char / len(sentence) < end_char_percent:
+    if num_eng_char / len(sentence) > en_char_percent:
         return True
     return False
 
@@ -63,6 +63,12 @@ def is_chinese(word):
             return False
         else:
             return True
+
+def is_chinese_sentence(sentence, en_char_percent=0.2):
+    num_eng_char = len(re.findall('[A-Za-z]', sentence))
+    if num_eng_char / len(sentence) < en_char_percent:
+        return True
+    return False
 
 def en_txt_preproc(txt):
     s_full_processed = []
@@ -186,3 +192,18 @@ class VocabHub(object):
         create_path(save_to_path)
         with open(os.path.join(save_to_path, 'vocab_hub.pkl'), 'wb') as f:
             pickle.dump(self, f)
+
+def create_dataset(en_txt, ch_txt, vocab_hub):
+    en_processed = np.array(en_txt_preproc(en_txt))
+    ch_processed = np.array(ch_txt_preproc(ch_txt))
+    is_en_idx = np.argwhere([is_english_sentence(s) for s in en_txt])
+    is_ch_idx = np.argwhere([is_chinese_sentence(s) for s in ch_txt])
+    keep_idx = np.concatenate([is_en_idx, is_ch_idx])[:, 0]
+    en_processed = en_processed[keep_idx]
+    ch_processed = ch_processed[keep_idx]
+    en_processed = [np.array(s.split(' ')) for s in en_processed]
+    ch_processed = [np.array(s.split(' ')) for s in ch_processed]
+    
+    en_processed = [np.array(list(map(lambda x: vocab_hub.en.word_to_idx(x), s))) for s in en_processed]
+    ch_processed = [np.array(list(map(lambda x: vocab_hub.ch.word_to_idx(x), s))) for s in ch_processed]
+    return en_processed, ch_processed
