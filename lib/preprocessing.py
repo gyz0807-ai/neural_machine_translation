@@ -122,6 +122,7 @@ class VocabEN(object):
                 final_word_ls.append(w)
         self.word_dict = dict(zip(range(2, len(final_word_ls)+2), final_word_ls))
         self.word_dict[1] = '<UNK>'
+        self.word_dict[0] = '<MASK>'
         self.rev_word_dict = {val:key for key, val in self.word_dict.items()}
 
     def word_to_idx(self, word):
@@ -159,6 +160,7 @@ class VocabCH(object):
                 final_word_ls.append(w)
         self.word_dict = dict(zip(range(2, len(final_word_ls)+2), final_word_ls))
         self.word_dict[1] = '<UNK>'
+        self.word_dict[0] = '<MASK>'
         self.rev_word_dict = {val:key for key, val in self.word_dict.items()}
 
     def word_to_idx(self, word):
@@ -171,7 +173,6 @@ class VocabCH(object):
         return self.word_dict[idx]
 
 class VocabHub(object):
-
     def __init__(self):
         self.en = None
         self.ch = None
@@ -207,3 +208,26 @@ def create_dataset(en_txt, ch_txt, vocab_hub):
     en_processed = [np.array(list(map(lambda x: vocab_hub.en.word_to_idx(x), s))) for s in en_processed]
     ch_processed = [np.array(list(map(lambda x: vocab_hub.ch.word_to_idx(x), s))) for s in ch_processed]
     return en_processed, ch_processed
+
+class VocabDataset(object):
+    def __init__(self):
+        self.en_processed = None
+        self.ch_processed = None
+
+    def build(self, en_txt, ch_txt, vocab_hub):
+        self.en_processed, self.ch_processed = create_dataset(en_txt, ch_txt, vocab_hub)
+
+    def save(self, save_to_path='./vocab'):
+        with open(os.path.join(save_to_path, 'vocab_dataset.pkl'), 'wb') as f:
+            pickle.dump(self, f)
+
+    def load(self, save_to_path='./vocab'):
+        with open(os.path.join(save_to_path, 'vocab_dataset.pkl'), 'rb') as f:
+            vocab_dataset = pickle.load(f)
+        self.en_processed, self.ch_processed = (vocab_dataset.en_processed,
+                                                vocab_dataset.ch_processed)
+
+def split_enc_dec_ds(ds):
+    enc_ds = [tup[0] for tup in ds]
+    dec_ds = [tup[1] for tup in ds]
+    return enc_ds, dec_ds
