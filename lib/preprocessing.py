@@ -22,6 +22,14 @@ def read_tmx(file_path):
     
     return en_txt, ch_txt
 
+def read_txt(file_path):
+    with open(file_path, 'r') as f:
+        txt_full = f.readlines()
+    txt_full_processed = np.array([s.split('\t') for s in txt_full])
+    en_txt = txt_full_processed[:, 0]
+    ch_txt = txt_full_processed[:, 1]
+    return en_txt, ch_txt
+
 def label_start_end(sentence):
     return '<START> ' + sentence + ' <END>'
 
