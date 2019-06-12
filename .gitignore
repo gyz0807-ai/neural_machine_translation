@@ -3,3 +3,4 @@ dataset
 .ipynb_checkpoints
 __pycache__
 vocab
+trained_model
