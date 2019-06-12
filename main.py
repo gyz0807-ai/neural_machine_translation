@@ -7,7 +7,7 @@ from absl import logging
 from sklearn.model_selection import train_test_split
 
 from nmt import NMT, Trainer
-from lib.preprocessing import VocabHub, read_tmx, VocabDataset, split_enc_dec_ds
+from lib.preprocessing import VocabHub, read_txt, VocabDataset, split_enc_dec_ds
 
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('reparse_vocab', 1, 'Whether construct a new vocab dict')
@@ -21,7 +21,7 @@ flags.DEFINE_integer('dec_embedding_dim', 256, 'Dimension of decoder embeddings'
 flags.DEFINE_integer('is_en_to_ch', 1, 'en->ch or ch->en')
 flags.DEFINE_integer('seed', 666, 'Seed for operations involving randomness')
 flags.DEFINE_string(
-    'data_file_path', './dataset/en-zh.tmx', '(Optional) Parallel text directory')
+    'data_file_path', './dataset/cmn.txt', '(Optional) Parallel text directory')
 flags.DEFINE_string(
     'root_model_dir', './trained_model', 'Root model directory')
 
@@ -29,7 +29,7 @@ def main(argv):
 
     if FLAGS.reparse_vocab:
         logging.info('Loading data...')
-        en_full, ch_full = read_tmx(FLAGS.data_file_path)
+        en_full, ch_full = read_txt(FLAGS.data_file_path)
 
     logging.info('Building/Loading vocab...')
     vocab_hub = VocabHub()
@@ -65,6 +65,7 @@ def main(argv):
         enc_processed, dec_processed = (
             dataset_generator.ch_processed,
             dataset_generator.en_processed)
+    enc_processed = [s[1:-1] for s in enc_processed]
     enc_dec_ds = list(zip(enc_processed, dec_processed))
     train_ds, test_ds = train_test_split(
         enc_dec_ds, test_size=0.003, random_state=FLAGS.seed)

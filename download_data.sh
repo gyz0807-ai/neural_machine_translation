@@ -1,3 +1,4 @@
 mkdir -p ./dataset
-wget -O ./dataset/en-zh.tmx.gz "http://opus.nlpl.eu/download.php?f=News-Commentary/v11/tmx/en-zh.tmx.gz"
-gzip -d ./dataset/en-zh.tmx.gz
+wget -O ./dataset/cmn-eng.zip "http://www.manythings.org/anki/cmn-eng.zip"
+unzip ./dataset/cmn-eng.zip -d ./dataset/
+rm -rf ./dataset/cmn-eng.zip
