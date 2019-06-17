@@ -220,4 +220,4 @@ def translate(input_sentence, model_path):
         s_full += w
     s_full
     
-    return s_full
+    return s_full[7:-5]
