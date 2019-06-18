@@ -1,4 +1,5 @@
 # Neural Machine Translation
+![nmt_plot](nmt_plot.jpg){:height="50%" width="50%"}
 
 ## How to use
 
