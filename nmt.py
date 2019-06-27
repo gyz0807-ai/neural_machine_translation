@@ -211,7 +211,7 @@ def translate(input_sentence, model_path):
         dec_logit_out = keras_model.dec_fc_logit(dec_out)
         dec_softmax_out = keras.activations.softmax(dec_logit_out)
         pred = np.argmax(dec_softmax_out.numpy()[0, -1, :])
-        dec_input = tf.concat([dec_input, tf.expand_dims([pred], 0)], 1)
+        dec_input = tf.expand_dims([pred], 0)
         final_sentence.append(pred)
     
     s_full = ''
