@@ -9,7 +9,7 @@
 2. Use the installed environment  
 `conda activate nmt_tf`
 
-3. Download dataset  
+3. Download dataset   
 Source of dataset: http://www.manythings.org/anki/  
 `sh download_data.sh`
 
